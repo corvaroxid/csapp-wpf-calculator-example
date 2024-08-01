@@ -1,0 +1,138 @@
+﻿<Window x:Class="CSApp.WPF.Calculator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CSApp.WPF.Calculator"
+        xmlns:engine="clr-namespace:CSApp.WPF.Calculator.CalculatorEngine"
+        xmlns:glob="clr-namespace:System.Globalization;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="Calculator" Background="#000000" Width="470" Height="619" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="MinHeight" Value="50"/>
+            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="3, 3, 3, 3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Name="backgroundElement"  BorderThickness="0" CornerRadius="10" Background="{TemplateBinding Background}"/>
+                            <ContentPresenter HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            TextElement.FontWeight="{TemplateBinding FontWeight}"
+                            TextElement.Foreground="{TemplateBinding Foreground}"
+                            TextElement.FontSize="{TemplateBinding FontSize}"
+                            TextElement.FontFamily="{TemplateBinding FontFamily}">
+                            </ContentPresenter>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="backgroundElement" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=BorderBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="Click" Handler="Button_Click"/>
+        </Style>
+
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="basicOperationButton">
+            <Setter Property="Background" Value="#FFFDA44A"/>
+            <Setter Property="BorderBrush" Value="#FBC78E"/>
+        </Style>
+        
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="operationButton">
+            <Setter Property="Background" Value="Gray"/>
+            <Setter Property="BorderBrush" Value="#FBC78E"/>
+        </Style>
+
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="numberButton">
+            <Setter Property="Background" Value="#343434"/>
+            <Setter Property="BorderBrush" Value="#737373"/>
+        </Style>
+        
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="dotButton">
+            <Setter Property="Background" Value="#FF61BD67"/>
+            <Setter Property="BorderBrush" Value="#737373"/>
+        </Style>
+
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="eraseButton">
+            <Setter Property="Background" Value="#FFF56B6B"/>
+            <Setter Property="BorderBrush" Value="#D9D9D7"/>
+        </Style>
+
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button" x:Key="equalsButton">
+            <Setter Property="Background" Value="#4285F4"/>
+            <Setter Property="BorderBrush" Value="#95b6ed"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel>
+        <Grid Margin="5, 5, 5, 15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="6" Margin="5">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+
+                <Border BorderBrush="#a5a5a5" Grid.Row="0" Grid.RowSpan="2" BorderThickness="3" CornerRadius="25"/>
+                <TextBlock x:Name="tbOut" FontSize="60" Foreground="White" Margin="20 0 20 20" Grid.Row="1" Text="{Binding Path=(engine:CalculateService.Input)}" TextAlignment="Right"/>
+                <TextBlock FontSize="20" Foreground="#A5A5A5" Margin="27 20 27 0" Grid.Row="0" Text="{Binding Path=(engine:CalculateService.Result)}" TextAlignment="Right"/>
+            </Grid>
+
+            <Button Grid.Column="3" Grid.Row="6" Content="=" IsDefault="True" Style="{StaticResource equalsButton}"/>
+            <Button Grid.Column="3" Grid.Row="2" Content="/" Style="{StaticResource basicOperationButton}"/>
+            <Button Grid.Column="3" Grid.Row="3" Content="*" Style="{StaticResource basicOperationButton}"/>
+            <Button Grid.Column="3" Grid.Row="4" Content="-" Style="{StaticResource basicOperationButton}"/>
+            <Button Grid.Column="3" Grid.Row="5" Content="+" Style="{StaticResource basicOperationButton}"/>
+
+            <Button Grid.Column="1" Grid.Row="2" Style="{StaticResource operationButton}" Content="x&#x00b2;"/>
+            <Button Grid.Column="0" Grid.Row="2" Style="{StaticResource operationButton}" Content="±"/>
+            <Button Grid.Column="2" Grid.Row="2" Style="{StaticResource operationButton}" Content="&#x221A;"/>
+
+            <Button Grid.Column="0" Grid.Row="3" Style="{StaticResource numberButton}" Content="7"/>
+            <Button Grid.Column="0" Grid.Row="4" Style="{StaticResource numberButton}" Content="4"/>
+            <Button Grid.Column="0" Grid.Row="5" Style="{StaticResource numberButton}" Content="1"/>
+
+            <Button Grid.Column="1" Grid.Row="3" Style="{StaticResource numberButton}" Content="8"/>
+            <Button Grid.Column="1" Grid.Row="4" Style="{StaticResource numberButton}" Content="5"/>
+            <Button Grid.Column="1" Grid.Row="5" Style="{StaticResource numberButton}" Content="2"/>
+
+            <Button Grid.Column="2" Grid.Row="3" Style="{StaticResource numberButton}" Content="9"/>
+            <Button Grid.Column="2" Grid.Row="4" Style="{StaticResource numberButton}" Content="6"/>
+            <Button Grid.Column="2" Grid.Row="5" Style="{StaticResource numberButton}" Content="3"/>
+            <Button Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="1" Style="{StaticResource numberButton}" Content="0"/>
+            
+            <Button Grid.Column="2" Grid.Row="6" Style="{StaticResource dotButton}" Content="."/>
+
+            <Button Grid.Column="3" Grid.Row="1" Style="{StaticResource eraseButton}" Content="&#x27f5;"/>
+            <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource eraseButton}" Content="CE"/>
+            <Button Grid.Column="2" Grid.Row="1" Style="{StaticResource eraseButton}" Content="C"/>
+
+            
+        </Grid>
+    </DockPanel>
+</Window>
