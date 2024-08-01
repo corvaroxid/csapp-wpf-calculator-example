@@ -11,28 +11,27 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
     {
         private static string _input;
         private static string _result;
-        private static string unaryResult;
-        private static string lastComputation;
+        private static string _unaryResult;
+        private static string _lastComputation;
         private static int _inputRestriction;
 
-        private static bool isFirstNumberSet;
-        private static bool isContainsPreviousNumber;
-        private static bool isContainsConstant;
-        private static bool isUnary;
-        private static bool isContainsParentheses;
+        private static bool _isFirstNumberSet;
+        private static bool _containsPreviousNumber;
+        private static bool _containsConstant;
+        private static bool _isUnary;
+        private static bool _containsParentheses;
 
-        private static double firstNumber;
-        private static double secondNumber;
+        private static double _firstNumber;
+        private static double _secondNumber;
+
+        private static OperationType _nextType;
+        private static OperationType _previousType;
+
+        private static char _separator;
 
         public static event EventHandler InputChanged;
         public static event EventHandler ResultChanged;
         public static event EventHandler ComputationEnded;
-
-        private static OperationType next;
-        private static OperationType previous;
-
-        private static char separator;
-
         public enum OperationType { Add, Substract, Div, Mult, None };
         protected static void OnInputChanged(EventArgs e) => InputChanged?.Invoke(null, e);
         protected static void OnResultChanged(EventArgs e) => ResultChanged?.Invoke(null, e);
@@ -45,23 +44,23 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
             }
             private set
             {
-                if (isContainsPreviousNumber || isContainsConstant)
+                if (_containsPreviousNumber || _containsConstant)
                 {
                     if (_input != string.Empty)
                     {
                         value = value.Remove(0, _input.Length);
                     }
 
-                    if (value != string.Empty && value[0] == separator)
+                    if (value != string.Empty && value[0] == _separator)
                     {
                         value = value.Insert(0, "0");
                     }
 
-                    isContainsPreviousNumber = false;
-                    isContainsConstant = false;
+                    _containsPreviousNumber = false;
+                    _containsConstant = false;
                 }
 
-                if ((value.Length > 1 && value[0] == '0') && value[1] != separator)
+                if ((value.Length > 1 && value[0] == '0') && value[1] != _separator)
                 {
                     value = value.Substring(1);
                 }
@@ -105,31 +104,31 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
             Result = string.Empty;
             InputRestriction = -1;
 
-            isFirstNumberSet = false;
-            isContainsPreviousNumber = false;
-            isContainsConstant = false;
-            isUnary = false;
-            isContainsParentheses = false;
+            _isFirstNumberSet = false;
+            _containsPreviousNumber = false;
+            _containsConstant = false;
+            _isUnary = false;
+            _containsParentheses = false;
 
-            firstNumber = 0;
-            secondNumber = 0;
-            unaryResult = string.Empty;
-            lastComputation = string.Empty;
+            _firstNumber = 0;
+            _secondNumber = 0;
+            _unaryResult = string.Empty;
+            _lastComputation = string.Empty;
 
-            next = OperationType.None;
-            previous = OperationType.None;
+            _nextType = OperationType.None;
+            _previousType = OperationType.None;
 
-            separator = Convert.ToChar(System.Threading.Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            _separator = Convert.ToChar(System.Threading.Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator);
         }
 
         public static void EnterNumber(int num)
         {
-            if (!isInputAllowed())
+            if (!CanInput())
             {
                 return;
             }
 
-            if (isUnary)
+            if (_isUnary)
             {
                 ClearUnary();
                 Input = num.ToString();
@@ -142,26 +141,26 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
 
         public static void EnterDot()
         {
-            if (isInputAllowed()
-                && (!Input.Contains(separator.ToString())
-                || isContainsPreviousNumber
-                || isContainsConstant))
+            if (CanInput()
+                && (!Input.Contains(_separator.ToString())
+                || _containsPreviousNumber
+                || _containsConstant))
             {
-                if (isUnary)
+                if (_isUnary)
                 {
                     ClearUnary();
-                    Input = "0" + separator.ToString();
+                    Input = "0" + _separator.ToString();
                 }
                 else
                 {
-                    Input += separator;
+                    Input += _separator;
                 }
             }
         }
 
         public static void DeleteLast()
         {
-            if (!isContainsPreviousNumber && !isContainsConstant && !isUnary)
+            if (!_containsPreviousNumber && !_containsConstant && !_isUnary)
             {
                 Input = Input.Remove(Input.Length - 1);
 
@@ -174,22 +173,22 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
 
         public static void ClearEntry()
         {
-            isContainsConstant = false;
-            isContainsPreviousNumber = false;
+            _containsConstant = false;
+            _containsPreviousNumber = false;
 
-            if (isUnary)
+            if (_isUnary)
             {
                 ClearUnary();
             }
 
             Input = "0";
             Result = string.Empty;
-            unaryResult = string.Empty;
+            _unaryResult = string.Empty;
         }
 
         public static void Clear()
         {
-            isContainsPreviousNumber = false;
+            _containsPreviousNumber = false;
             ClearResult();
             Input = "0";
         }
@@ -202,39 +201,39 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
                 return;
             }
 
-            if (isContainsPreviousNumber || (next == OperationType.None && isUnary))
+            if (_containsPreviousNumber || (_nextType == OperationType.None && _isUnary))
             {
 
-                isContainsPreviousNumber = true;
+                _containsPreviousNumber = true;
 
-                if (isUnary)
+                if (_isUnary)
                 {
-                    lastComputation = _result + " = " + Input;
+                    _lastComputation = _result + " = " + Input;
 
                 }
-                else if (previous != OperationType.None || _result[_result.Length - 4] == ')')
+                else if (_previousType != OperationType.None || _result[_result.Length - 4] == ')')
                 {
-                    lastComputation = _result.Remove(_result.Length - 2, 2) + "= " + Input;
+                    _lastComputation = _result.Remove(_result.Length - 2, 2) + "= " + Input;
                 }
 
                 ComputationEnded?.Invoke(null, new EventArgs());
                 ClearResult();
 
             }
-            else if ((previous != OperationType.None
-                || (previous == OperationType.None && next != OperationType.None)))
+            else if ((_previousType != OperationType.None
+                || (_previousType == OperationType.None && _nextType != OperationType.None)))
             {
-                if (Double.TryParse(Input, out secondNumber))
+                if (Double.TryParse(Input, out _secondNumber))
                 {
                     string secondNumber = Input;
-                    Compute(next);
-                    if (isUnary)
+                    Compute(_nextType);
+                    if (_isUnary)
                     {
-                        lastComputation = _result + " = " + Input;
+                        _lastComputation = _result + " = " + Input;
                     }
                     else
                     {
-                        lastComputation = _result + secondNumber + " = " + Input;
+                        _lastComputation = _result + secondNumber + " = " + Input;
                     }
 
                     ComputationEnded?.Invoke(null, new EventArgs());
@@ -255,7 +254,7 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
             }
         }
 
-        public static void SquareRoot()
+        public static void DoSqrt()
         {
             double num;
             if (Double.TryParse(Input, out num))
@@ -270,7 +269,7 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
                 Input = Math.Sqrt(num).ToString();
             }
         }
-        public static void Square()
+        public static void DoSquare()
         {
             double num;
             if (Double.TryParse(Input, out num))
@@ -304,7 +303,7 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
 
         public static string getLastComputation()
         {
-            return lastComputation;
+            return _lastComputation;
         }
 
         private static void AddNext(in OperationType operationType, char operationSign)
@@ -312,39 +311,39 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
             double number;
             if (Double.TryParse(Input, out number))
             {
-                if (isFirstNumberSet)
+                if (_isFirstNumberSet)
                 {
-                    secondNumber = number;
+                    _secondNumber = number;
                 }
                 else
                 {
-                    firstNumber = number;
-                    isFirstNumberSet = true;
+                    _firstNumber = number;
+                    _isFirstNumberSet = true;
                 }
 
                 string resultValue;
 
-                if (next != OperationType.None && (!isContainsPreviousNumber || isContainsConstant))
+                if (_nextType != OperationType.None && (!_containsPreviousNumber || _containsConstant))
                 {
-                    Compute(next);
+                    Compute(_nextType);
 
-                    if (!isUnary)
+                    if (!_isUnary)
                     {
-                        resultValue = secondNumber.ToString();
+                        resultValue = _secondNumber.ToString();
                     }
                     else
                     {
                         resultValue = string.Empty;
-                        isUnary = false;
-                        unaryResult = string.Empty;
+                        _isUnary = false;
+                        _unaryResult = string.Empty;
                     }
 
                     if ((operationType == OperationType.Mult || operationType == OperationType.Div)
-                        && (previous == OperationType.Add || previous == OperationType.Substract)
-                        && !isContainsParentheses)
+                        && (_previousType == OperationType.Add || _previousType == OperationType.Substract)
+                        && !_containsParentheses)
                     {
                         Result = "(" + _result + resultValue + ")" + ' ' + operationSign + ' ';
-                        isContainsParentheses = true;
+                        _containsParentheses = true;
                     }
                     else
                     {
@@ -352,46 +351,46 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
                     }
 
                 }
-                else if (!isContainsPreviousNumber || isContainsConstant)
+                else if (!_containsPreviousNumber || _containsConstant)
                 {
-                    if (isUnary)
+                    if (_isUnary)
                     {
                         Result = _result + " " + operationSign + " ";
-                        isUnary = false;
-                        unaryResult = string.Empty;
+                        _isUnary = false;
+                        _unaryResult = string.Empty;
                     }
                     else
                     {
-                        Result = _result + firstNumber.ToString() + ' ' + operationSign + ' ';
+                        Result = _result + _firstNumber.ToString() + ' ' + operationSign + ' ';
                     }
 
-                    if (Input[Input.Length - 1] == separator || (Input.Length > 1 && Input[Input.Length - 2] == separator && Input[Input.Length - 1] == '0'))
+                    if (Input[Input.Length - 1] == _separator || (Input.Length > 1 && Input[Input.Length - 2] == _separator && Input[Input.Length - 1] == '0'))
                     {
-                        Input = firstNumber.ToString();
+                        Input = _firstNumber.ToString();
                     }
                 }
                 else
                 {
-                    if (previous != OperationType.None
+                    if (_previousType != OperationType.None
                         && (operationType == OperationType.Substract || operationType == OperationType.Add)
-                        && isContainsParentheses)
+                        && _containsParentheses)
                     {
                         Result = (_result.Remove(_result.Length - 4, 4) + ' ' + operationSign + ' ').Remove(0, 1);
-                        isContainsParentheses = false;
+                        _containsParentheses = false;
                     }
-                    else if (previous != OperationType.None
+                    else if (_previousType != OperationType.None
                         && (operationType == OperationType.Mult || operationType == OperationType.Div)
-                        && !isContainsParentheses)
+                        && !_containsParentheses)
                     {
                         Result = "(" + _result.Remove(_result.Length - 3, 3) + ")" + ' ' + operationSign + ' ';
-                        isContainsParentheses = true;
+                        _containsParentheses = true;
                     }
                     else
                     {
 
-                        if (Result == string.Empty && isContainsPreviousNumber)
+                        if (Result == string.Empty && _containsPreviousNumber)
                         {
-                            Result = firstNumber.ToString() + " " + operationSign + " ";
+                            Result = _firstNumber.ToString() + " " + operationSign + " ";
                         }
                         else
                         {
@@ -400,9 +399,9 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
                     }
                 }
 
-                next = operationType;
-                isContainsPreviousNumber = true;
-                isContainsConstant = false;
+                _nextType = operationType;
+                _containsPreviousNumber = true;
+                _containsConstant = false;
             }
         }
         private static void Compute(OperationType op)
@@ -410,49 +409,48 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
             switch (op)
             {
                 case OperationType.Add:
-                    firstNumber += secondNumber;
+                    _firstNumber += _secondNumber;
                     break;
                 case OperationType.Substract:
-                    firstNumber -= secondNumber;
+                    _firstNumber -= _secondNumber;
                     break;
                 case OperationType.Div:
-                    if (secondNumber == 0)
+                    if (_secondNumber == 0)
                     {
                         ThrowError("Can not divide by zero");
                         return;
                     }
                     else
                     {
-                        firstNumber /= secondNumber;
+                        _firstNumber /= _secondNumber;
                     }
                     break;
                 case OperationType.Mult:
-                    firstNumber *= secondNumber;
+                    _firstNumber *= _secondNumber;
                     break;
             }
-            previous = next;
-            next = OperationType.None;
-            unaryResult = string.Empty;
-            isContainsConstant = false;
-            Input = firstNumber.ToString();
-            isContainsPreviousNumber = true;
-            isContainsParentheses = false;
-
+            _previousType = _nextType;
+            _nextType = OperationType.None;
+            _unaryResult = string.Empty;
+            _containsConstant = false;
+            Input = _firstNumber.ToString();
+            _containsPreviousNumber = true;
+            _containsParentheses = false;
         }
 
-        private static bool isInputAllowed()
+        private static bool CanInput()
         {
-            return ((isContainsPreviousNumber || (InputRestriction == -1 || Input.Length + 1 <= InputRestriction) || isUnary));
+            return ((_containsPreviousNumber || (InputRestriction == -1 || Input.Length + 1 <= InputRestriction) || _isUnary));
         }
 
         private static void ClearUnary()
         {
-            if (Result != string.Empty && next != OperationType.None)
+            if (Result != string.Empty && _nextType != OperationType.None)
             {
 
-                if (unaryResult != string.Empty)
+                if (_unaryResult != string.Empty)
                 {
-                    Result = _result.Substring(0, _result.Length - (unaryResult.Length + 1)) + ' ';
+                    Result = _result.Substring(0, _result.Length - (_unaryResult.Length + 1)) + ' ';
                 }
             }
             else
@@ -460,50 +458,50 @@ namespace CSApp.WPF.Calculator.CalculatorEngine
                 Result = string.Empty;
             }
 
-            isUnary = false;
-            unaryResult = string.Empty;
+            _isUnary = false;
+            _unaryResult = string.Empty;
         }
 
         private static void PrintUnaryOperation(double num, string functionName)
         {
-            if (unaryResult != string.Empty)
+            if (_unaryResult != string.Empty)
             {
-                string tempResult = unaryResult;
+                string tempResult = _unaryResult;
                 ClearUnary();
-                unaryResult = functionName + "(" + tempResult + ")";
+                _unaryResult = functionName + "(" + tempResult + ")";
             }
             else
             {
-                unaryResult = functionName + "(" + num.ToString() + ")";
+                _unaryResult = functionName + "(" + num.ToString() + ")";
             }
 
-            isContainsPreviousNumber = false;
-            isUnary = true;
-            Result = _result + unaryResult;
+            _containsPreviousNumber = false;
+            _isUnary = true;
+            Result = _result + _unaryResult;
         }
 
         private static void ThrowError(string errorMessage)
         {
-            previous = OperationType.None;
-            next = OperationType.None;
-            isContainsPreviousNumber = false;
-            isFirstNumberSet = false;
+            _previousType = OperationType.None;
+            _nextType = OperationType.None;
+            _containsPreviousNumber = false;
+            _isFirstNumberSet = false;
             MessageBox.Show(errorMessage);
         }
 
         private static void ClearResult()
         {
-            isFirstNumberSet = false;
-            isContainsConstant = false;
+            _isFirstNumberSet = false;
+            _containsConstant = false;
 
-            isUnary = false;
+            _isUnary = false;
 
             Result = string.Empty;
-            unaryResult = string.Empty;
-            isContainsParentheses = false;
+            _unaryResult = string.Empty;
+            _containsParentheses = false;
 
-            next = OperationType.None;
-            previous = OperationType.None;
+            _nextType = OperationType.None;
+            _previousType = OperationType.None;
         }
     }
 }

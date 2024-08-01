@@ -77,10 +77,10 @@ namespace CSApp.WPF.Calculator
                     CalculateService.Negate();
                     break;
                 case "√":
-                    CalculateService.SquareRoot();
+                    CalculateService.DoSqrt();
                     break;
                 case "x²":
-                    CalculateService.Square();
+                    CalculateService.DoSquare();
                     break;
             }
         }
