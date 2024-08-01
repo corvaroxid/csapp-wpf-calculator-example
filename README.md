@@ -1,5 +1,9 @@
 # Calculator
 
+### GUI
+
+![calculator](./calculator.jpg)
+
 ### Supported operations
 * Addition
 * Subtraction
